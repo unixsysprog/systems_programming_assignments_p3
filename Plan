@@ -1,0 +1,173 @@
+Project: sttyl 
+by Christopher Fuentes
+cfuentes@g.harvard.edu
+HUID 60857326
+
+Purpose: A simplified version of the stty utility
+
+Outline:
+	sttyl works almost identically to stty on a small subset of options. 
+        The tool can be used to perform actions such as silencing input (e.g.
+        when entering sensitive data that you don't want to echo onto the 
+        terminal) or changing the 'kill' key. 
+
+        Usage: ./sttyl [flags]
+ 
+Output:
+        Without flags specified, the program outputs a summary of all of its 
+        supported flags plus info about baud rate, rows and columns of the 
+        current terminal window. 
+
+        When flags are specified, the program will simply make the changes 
+        requested (setting a flag on or off, or changing the mapping of a 
+        character) and produce no output. If erroneous input is detected,
+        the program alerts the user in the typical fashion and exits. 
+
+
+Arguments:
+	The following flags are supported:
+                [-]icrnl
+                [-]opost, 
+                [-]icanon 
+                [-]isig 
+                [-]echo 
+                [-]echoe     
+                [-]hupcl 
+
+                intr    <char> 
+                erase   <char>
+                kill    <char>
+
+How it Works:
+
+        main
+                Main starts by grabbing the current params via get_tty_info, 
+                which just makes a system call to tcgetattr. Once we have the 
+                info, we move into one of two branches based on the number of
+                arguments: either there is 1 arg (programname) and we just
+                display current tty info, or there are multiple args and
+                we move into flag parsing. 
+
+        show_stty_info
+                Helper function to handle showing data. This is just a wrapper
+                for several other methods which handle the specific data processing,
+                since there are several different types of data and not all 
+                available via the current tty info (e.g., rows and cols.)
+
+                        showbaud prints current baud rate from tty info
+
+                        show_dimensions attempts to get dimensions via the ioctl
+                                library, falls back to environment variables 
+                                COLUMNS and LINES if ioctl is not available, 
+                                and finally just doesn't print row/col info
+                                if neither method works. 
+
+                        show_special_chars loops through the table of supported
+                                special characters, accessing the tty 
+                                info's c_cc array to get the actual characters. 
+                                It has a special case for the delete key 
+                                (ascii code 127) and checks whether the 
+                                characters are actual printable chars or 
+                                control- equivalents. 
+
+                        print_tty_flagsets loops through each table of supported
+                                flags (input, output, control, local) and 
+                                accesses the appropriate value from the tty 
+                                info to do a bitmask read operation. 
+
+        handle_next_arg
+                Helper function to handle the next argument from the command 
+                line. The idea behind this function is that it will read 
+                the next char, determine whether it's a standalone flag or 
+                a special char (which requires its own argument) and attempts
+                to apply that flag to the current tty info. The program 
+                will exit early on any error, but return the index of the 
+                next arg to parse (if any) or 0 (if no more are left). Thus
+                this function can be called in a while loop and parse the 
+                entire command line. 
+
+                For standalone flags, there is a helper function via stty_utils
+                used for searching whether a key exists in the tables of 
+                supported flags. Right now, this table uses a linear-time search
+                technique, but could easily be modified to a binary search if
+                the tables were guaranteed to be maintained in sorted order. 
+                However, with fixed input sizes so small, I'm not sure the 
+                optimization is necessary at this point. 
+
+                        find_option_flag takes a search string and searches
+                        each of the flag tables. If it finds a matching flag, 
+                        it sets a pointer to a struct flaginfo such that the
+                        calling function can access the flag's bitmask. 
+
+                        Similarly, find_special_char_flag looks through 
+                        the special chars table and sets a pointer to a
+                        ccinfo struct which contains a constant for accessing
+                        that char in the tty info's c_cc array. 
+
+                        handle_cc is responsible for handling the setting of
+                        special characters since the process is distinctly 
+                        different than standalone flags. First, there are
+                        no bitwise operations involved. Seconds, an additional
+                        argument from the commandline is expected. Assuming
+                        a valid single character is provided and we are able
+                        to get the ccinfo from the special chars table, 
+                        we can index into the tty info's c_cc array and
+                        set the new character value. 
+
+                        set_flag handles all of the other flag operations. 
+                        First, it needs to know whether to set or unset the 
+                        flag (based on the existence of a '-' prepending a 
+                        flagname). It then gets the flaginfo struct 
+                        corresponding to the flag specified, grabs the 
+                        corresponding bitmask, determines which tty value
+                        to perform the operation on (via the flaginfo's 
+                        type field), and either sets the flag on or off
+                        using bitwise & or |. 
+
+Potential Error Conditions/Additional Considerations:
+        Flagname not recognized:
+                This is easily handled by virtue of the lookup tables. 
+                If a value isn't in the table, we disregard it.
+
+        Missing argument for special char flag:
+                The handle_cc function makes sure that the user specified
+                another token after specifying a special char flag. It
+                also enforces that the value is only a single char. 
+                Otherwise, an error is printed and the program exits. 
+
+        Invalid character for special char flag:
+                If the specified character isn't an ascii character,
+                handle_cc rejects it and exits. Thus, characters
+                like unicode are rejected. 
+
+        Extending program functionality:
+                Any of the standalone flags or special character flags
+                from stty can easily be added without major modifications. 
+                Only the tables in stty_utils.c have to be modified. Since
+                each table is 'NULL terminated' in a way, the calling 
+                functions can simply loop through them no matter how large
+                or small they are and simply stop once they reach a NULL.
+                Therefore, the only requirement is that no additional 
+                'NULL' structs are inserted into the table before the
+                end. 
+
+                If the program were extended to use binary search for 
+                lookup, then the tables would additionaly need to be
+                maintained in alphabetical order on the 'desc' field. 
+
+
+        Really Large Inputs/Buffer Overflow
+                The program doesn't assume a limit on any of the inputs.
+                The only time a set-limit buffer is used is when extracting
+                "flag" from "-flag", during which time the buffer is set
+                to the correct length of the current string size - 1. 
+
+
+                Attempting to provide giant command line arguments therefore
+                exposes no vulnerability in the program itself: sttyl handles
+                them exactly as ttyl does. 
+
+
+
+
+    

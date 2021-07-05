@@ -1,0 +1,119 @@
+Script started on Sat 14 Mar 2015 07:46:04 PM EDT
+cfuentes@ice2:~/CSCI-E28/pset3$ f[K#first, get into sh
+cfuentes@ice2:~/CSCI-E28/pset3$ sh
+$ #o ok, now we make the pgram    ram  ogram
+$ make
+cc -Wall -c stty_utils.c
+cc -Wall sttyl.c stty_utils.o -o sttyl
+$ #now for tests
+$ e cat ./test
+~lib215/hw/stty/test.stty
+$ ./test
+   0. Looking at output : tf should examine this 
+ 
+speed 38400 baud; rows 25; columns 118
+erase = ^? intr = ^C kill = ^U 
+icrnl 
+opost 
+echo echoe icanon isig 
+-hupcl 
+ 
+   I. testing erase and kill chars  
+        a. Simple chars .. /bin/stty: standard input: unable to perform all requested operations
+OK
+ 
+	c. Typical one-char control chars.. OK
+ 
+	d. No argument given to erase..sttyl: missing argument to `erase'
+OK
+	Note: your version exited with 1
+ 
+  III. Checking each flag separately .. 
+		icrnl ..  OK 
+                hupcl ..  OK 
+                echo ..  OK 
+                echoe ..  OK 
+                opost ..  OK 
+		icanon ..  OK 
+                isig ..  OK 
+ 
+ IV. Checking all flag pairs
+ icrnl:OK hupcl:OK echo:OK echoe:OK opost:OK icanon:OK isig:OK/bin/stty: standard input: unable to perform all requested operations
+ 
+	Checking results .. 
+all tests worked correctly
+resetting tty
+$ #now for unicode
+$ ./sttyl e erase 愛
+sttyl: invalid integer argument `愛'
+$ stty erase 愛
+stty: invalid integer argument `愛'
+Try `stty --help' for more information.
+$ #note that our p version doesn't have --help info
+$ #so it doen sn't make sense to print that second line
+$ 
+$ 
+$ #now to ts est kill and erase
+$ 
+$ ./sttyl erase b
+$ ./sttyl
+speed 9600 baud; rows 25; columns 118
+erase = b intr = ^C kill = ^U 
+icrnl 
+opost 
+echo echoe icanon isig 
+-hupcl 
+$ stty
+speed 9600 baud; line = 0;
+erase = b; eol = M-^?; eol2 = M-^?;
+-brkint ixany
+-echok
+$ ./sttyl erase ^?
+$ ./sttyl
+speed 9600 baud; rows 25; columns 118
+erase = ^? intr = ^C kill = ^U 
+icrnl 
+opost 
+echo echoe icanon isig 
+-hupcl 
+$ e sttyl
+sh: 20: sttyl: not found
+$ #whoops
+$ stty
+speed 9600 baud; line = 0;
+eol = M-^?; eol2 = M-^?;
+-brkint ixany
+-echok
+$ #now for kill
+$ @ #i  ./styll   tyl kill z
+$ ./sttyl
+speed 9600 baud; rows 25; columns 118
+erase = ^? intr = ^C kill = z 
+icrnl 
+opost 
+echo echoe icanon isig 
+-hupcl 
+$ stty
+speed 9600 baud; line = 0;
+kill = z; eol = M-^?; eol2 = M-^?;
+-brkint ixany
+-echok
+$ ./sttyl kill ^U
+$ ./sttyl
+speed 9600 baud; rows 25; columns 118
+erase = ^? intr = ^C kill = ^U 
+icrnl 
+opost 
+echo echoe icanon isig 
+-hupcl 
+$ stty
+speed 9600 baud; line = 0;
+eol = M-^?; eol2 = M-^?;
+-brkint ixany
+-echok
+$ #Oi k, all done
+$ exit
+cfuentes@ice2:~/CSCI-E28/pset3$ exit
+exit
+
+Script done on Sat 14 Mar 2015 07:49:13 PM EDT

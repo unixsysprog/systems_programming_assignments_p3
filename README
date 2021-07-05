@@ -1,0 +1,61 @@
+Christopher Fuentes
+cfuentes@g.harvard.edu
+HUID 60857326
+Project 3
+
+
+Submission Summary:
+
+sttyl.c
+	This file contains the main logic for the project, including
+	argument parsing, error handling, reading and updating termios, 
+	and printing info to stdout.
+
+stty_utils.h
+	Header file for stty_utils.c, containing declarations of 
+	several tables used for mapping command line args into 
+	bitmasks or special character constants. Its main purpose is
+	to provide these tables and an interface by which to search these
+	tables. 
+
+stty_utils.c
+	Contains the actual definitions of the flag tables, including
+	4 tables for each of input, output, control and local flags, as 
+	well as a fifth table for special characters. One struct is declared
+	in stty_utils.h to handle special character flags, and another struct
+	is declared to handle all other types of flags. Even though both of 
+	these structs look very similar (insofar as they both have an int and 
+	a char * member), I felt it were best that they were differentiated 
+	since the int in the general flag struct is a reference to a bitmask
+	whereas the special character struct's int is a reference to some 
+	indexing constant. 
+
+	There is a char member in the general flag struct which indicates
+	which of the four tables contain that flag (i.e., which type of flag
+	it is–input, output, control, or local). This is useful for 
+	determining which member of the struct termios should use the 
+	bitmask. 
+
+	This program can be extended with other flags or special characters
+	from stty by simply adding them to the appropriate table. 
+
+
+Usage: ./sttyl [<flag>, ...]
+
+Flags are set by specifying just the name of the flag and unset by prepending a
+dash "-" in front of it. 
+
+If no flags are specified, program will print:
+
+	speed <int> baud; rows <int>; columns <int>;
+	intr = <string>; erase = <string>; kill = <string>;
+	[-]icrnl
+	[-]opost, 
+	[-]icanon [-]isig [-]echo [-]echoe 
+	[-]hupcl 
+
+Supported special characters (does not work with control-characters):
+	intr
+	erase
+	kill
+
